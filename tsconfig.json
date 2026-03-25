@@ -1,0 +1,1 @@
+{\n  "compilerOptions": {\n    "target": "esnext",\n    "lib": ["esnext", "dom"],\n    "jsx": "react-native",\n    "module": "commonjs",\n    "strict": true,\n    "esModuleInterop": true,\n    "skipLibCheck": true,\n    "forceConsistentCasingInFileNames": true,\n    "noEmit": true\n  },\n  "exclude": [\n    "node_modules"\n  ]\n}
