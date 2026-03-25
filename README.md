@@ -21,7 +21,7 @@ app/                  # Rutas y pantallas (Expo Router)
 src/
   components/         # UI reutilizable
   constants/          # Tema y categorías
-  db/                 # Inicialización SQLite
+  repositories/       # Adaptadores de persistencia (native/web)
   hooks/              # Bootstrap y búsqueda
   services/           # Persistencia y notificaciones
   store/              # Estado global y casos de uso
@@ -83,7 +83,8 @@ npm run lint
 
 ## Notas
 
-- Todos los datos se guardan en SQLite local (`mi-dia.db`).
+- En iOS/Android los datos se guardan en SQLite local (`mi-dia.db`).
+- En web/Codespaces los datos se guardan en `localStorage` mediante adapter web.
 - Si activas PIN, se guarda de forma local (MVP).
 - El proyecto queda listo para agregar sincronización futura (capa `services`).
 

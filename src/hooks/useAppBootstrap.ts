@@ -7,8 +7,18 @@ export function useAppBootstrap() {
   const initialized = useAppStore((s) => s.initialized);
 
   useEffect(() => {
-    initialize();
-    requestNotificationPermission();
+    let cancelled = false;
+
+    const run = async () => {
+      await initialize();
+      if (!cancelled) await requestNotificationPermission();
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
   }, [initialize]);
 
   return initialized;

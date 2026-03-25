@@ -15,8 +15,8 @@ export default function SettingsScreen() {
         <Text style={{ fontSize: 18, fontWeight: '700' }}>Privacidad</Text>
         <Text>Bloqueo opcional con PIN local.</Text>
         <TextInput placeholder="PIN (4 dígitos)" value={pin} onChangeText={setPinValue} keyboardType="number-pad" secureTextEntry style={{ borderWidth: 1, padding: 10, borderRadius: 8 }} />
-        <Button title="Guardar PIN" onPress={() => setPin(pin)} />
-        <Button title="Quitar PIN" onPress={() => setPin(undefined)} />
+        <Button title="Guardar PIN" onPress={async () => { await setPin(pin); }} />
+        <Button title="Quitar PIN" onPress={async () => { await setPin(undefined); }} />
       </Card>
       {settings.pinEnabled && <Button title="Probar bloqueo" onPress={() => router.push('/lock')} />}
     </AppContainer>

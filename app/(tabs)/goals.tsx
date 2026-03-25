@@ -25,7 +25,7 @@ export default function GoalsScreen() {
         <TextInput placeholder="Categoría" value={watch('category')} onChangeText={(v) => setValue('category', v)} style={{ borderWidth: 1, padding: 10, borderRadius: 8 }} />
         <TextInput placeholder="Valor objetivo" value={String(watch('targetValue') ?? '')} onChangeText={(v) => setValue('targetValue', Number(v) || undefined)} keyboardType="numeric" style={{ borderWidth: 1, padding: 10, borderRadius: 8 }} />
         <TextInput placeholder="Unidad (USD, sesiones...)" value={watch('unit')} onChangeText={(v) => setValue('unit', v)} style={{ borderWidth: 1, padding: 10, borderRadius: 8 }} />
-        <Button title="Agregar meta" onPress={handleSubmit((values) => addGoal(values))} />
+        <Button title="Agregar meta" onPress={handleSubmit(async (values) => { await addGoal(values); })} />
       </Card>
       <Card>
         <Text style={{ fontSize: 18, fontWeight: '700' }}>Metas</Text>
@@ -37,7 +37,7 @@ export default function GoalsScreen() {
               <View style={{ height: 8, backgroundColor: '#e5e7eb', borderRadius: 8 }}>
                 <View style={{ width: `${percent}%`, height: 8, backgroundColor: '#5B7CFA', borderRadius: 8 }} />
               </View>
-              <Button title="+1 progreso" onPress={() => updateGoalProgress(goal.id, goal.currentValue + 1)} />
+              <Button title="+1 progreso" onPress={async () => { await updateGoalProgress(goal.id, goal.currentValue + 1); }} />
             </View>
           );
         })}

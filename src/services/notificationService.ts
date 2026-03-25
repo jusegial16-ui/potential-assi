@@ -1,24 +1,37 @@
-import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { Reminder } from '@/types';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldShowAlert: true,
-    shouldSetBadge: false
-  })
-});
+let notificationsModule: typeof import('expo-notifications') | null = null;
+
+async function getNotifications() {
+  if (Platform.OS === 'web') return null;
+  if (notificationsModule) return notificationsModule;
+  notificationsModule = await import('expo-notifications');
+  notificationsModule.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldShowAlert: true,
+      shouldSetBadge: false
+    })
+  });
+  return notificationsModule;
+}
 
 export async function requestNotificationPermission() {
+  const Notifications = await getNotifications();
+  if (!Notifications) return false;
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
 }
 
 export async function scheduleReminderNotification(reminder: Reminder) {
+  const Notifications = await getNotifications();
+  if (!Notifications) return undefined;
+
   const triggerDate = new Date(reminder.remindAt);
   if (triggerDate < new Date()) return undefined;
 
-  const id = await Notifications.scheduleNotificationAsync({
+  return Notifications.scheduleNotificationAsync({
     content: {
       title: reminder.title,
       body: reminder.description || 'Recordatorio de Mi Día'
@@ -28,11 +41,10 @@ export async function scheduleReminderNotification(reminder: Reminder) {
       date: triggerDate
     }
   });
-
-  return id;
 }
 
 export async function cancelReminderNotification(notificationId?: string) {
-  if (!notificationId) return;
+  const Notifications = await getNotifications();
+  if (!Notifications || !notificationId) return;
   await Notifications.cancelScheduledNotificationAsync(notificationId);
 }

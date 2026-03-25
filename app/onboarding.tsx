@@ -15,8 +15,8 @@ export default function OnboardingScreen() {
         <Text>Tu diario inteligente local para tareas, metas y recordatorios.</Text>
         <Button
           title="Empezar"
-          onPress={() => {
-            completeOnboarding();
+          onPress={async () => {
+            await completeOnboarding();
             router.replace('/(tabs)');
           }}
         />

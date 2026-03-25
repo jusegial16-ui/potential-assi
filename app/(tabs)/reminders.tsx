@@ -37,7 +37,7 @@ export default function RemindersScreen() {
         {reminders.map((item) => (
           <View key={item.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{ flex: 1 }}>{item.title}</Text>
-            <Button title={item.completed ? 'Pendiente' : 'Completar'} onPress={() => toggleReminder(item.id)} />
+            <Button title={item.completed ? 'Pendiente' : 'Completar'} onPress={async () => { await toggleReminder(item.id); }} />
           </View>
         ))}
       </Card>

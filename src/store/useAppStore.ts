@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { initDb } from '@/db';
 import { cancelReminderNotification, scheduleReminderNotification } from '@/services/notificationService';
-import { storageService } from '@/services/storageService';
 import { Goal, JournalEntry, Reminder, Task, AppSettings, ParsedEntry } from '@/types';
+import { repository } from '@/repositories';
 
 interface AppState {
   initialized: boolean;
@@ -13,15 +12,15 @@ interface AppState {
   goals: Goal[];
   settings: AppSettings;
   initialize: () => Promise<void>;
-  completeOnboarding: () => void;
-  setPin: (pin?: string) => void;
+  completeOnboarding: () => Promise<void>;
+  setPin: (pin?: string) => Promise<void>;
   addJournalWithParsed: (rawText: string, parsed: ParsedEntry) => Promise<string>;
-  toggleTask: (id: string) => void;
-  addTask: (input: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'completed'>) => void;
+  toggleTask: (id: string) => Promise<void>;
+  addTask: (input: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'completed'>) => Promise<void>;
   addReminder: (input: Omit<Reminder, 'id' | 'createdAt' | 'updatedAt' | 'completed' | 'notificationId'>) => Promise<void>;
   toggleReminder: (id: string) => Promise<void>;
-  addGoal: (input: Omit<Goal, 'id' | 'createdAt' | 'updatedAt' | 'currentValue' | 'status'>) => void;
-  updateGoalProgress: (id: string, value: number) => void;
+  addGoal: (input: Omit<Goal, 'id' | 'createdAt' | 'updatedAt' | 'currentValue' | 'status'>) => Promise<void>;
+  updateGoalProgress: (id: string, value: number) => Promise<void>;
 }
 
 const nowIso = () => new Date().toISOString();
@@ -35,73 +34,57 @@ export const useAppStore = create<AppState>((set, get) => ({
   settings: { onboardingDone: false, pinEnabled: false },
 
   initialize: async () => {
-    initDb();
-    storageService.seedIfEmpty();
-    set({
-      entries: storageService.getJournalEntries(),
-      tasks: storageService.getTasks(),
-      reminders: storageService.getReminders(),
-      goals: storageService.getGoals(),
-      settings: storageService.getSettings(),
-      initialized: true
-    });
+    await repository.init();
+    await repository.seedIfEmpty();
+    const [entries, tasks, reminders, goals, settings] = await Promise.all([
+      repository.getJournalEntries(),
+      repository.getTasks(),
+      repository.getReminders(),
+      repository.getGoals(),
+      repository.getSettings()
+    ]);
+    set({ entries, tasks, reminders, goals, settings, initialized: true });
   },
 
-  completeOnboarding: () => {
+  completeOnboarding: async () => {
     const settings = { ...get().settings, onboardingDone: true };
-    storageService.saveSettings(settings);
+    await repository.saveSettings(settings);
     set({ settings });
   },
 
-  setPin: (pin) => {
+  setPin: async (pin) => {
     const settings = { ...get().settings, pinEnabled: !!pin, pinCode: pin };
-    storageService.saveSettings(settings);
+    await repository.saveSettings(settings);
     set({ settings });
   },
 
   addJournalWithParsed: async (rawText, parsed) => {
     const id = uuidv4();
     const timestamp = nowIso();
-    const entry: JournalEntry = {
-      id,
-      rawText,
-      summary: parsed.summary,
-      tags: parsed.tags,
-      date: timestamp,
-      createdAt: timestamp,
-      updatedAt: timestamp
-    };
-    storageService.saveJournalEntry(entry);
+    const entry: JournalEntry = { id, rawText, summary: parsed.summary, tags: parsed.tags, date: timestamp, createdAt: timestamp, updatedAt: timestamp };
+    await repository.saveJournalEntry(entry);
 
-    parsed.tasks.forEach((task) => {
-      get().addTask({ ...task, relatedEntryId: id });
-    });
-
-    for (const reminder of parsed.reminders) {
-      await get().addReminder({ ...reminder, relatedEntryId: id });
-    }
-
-    parsed.goals.forEach((goal) => {
-      get().addGoal(goal);
-    });
+    for (const task of parsed.tasks) await get().addTask({ ...task, relatedEntryId: id });
+    for (const reminder of parsed.reminders) await get().addReminder({ ...reminder, relatedEntryId: id });
+    for (const goal of parsed.goals) await get().addGoal(goal);
 
     set({ entries: [entry, ...get().entries] });
     return id;
   },
 
-  toggleTask: (id) => {
-    const tasks = get().tasks.map((task) => {
-      if (task.id !== id) return task;
-      const updated = { ...task, completed: !task.completed, updatedAt: nowIso() };
-      storageService.saveTask(updated);
-      return updated;
-    });
+  toggleTask: async (id) => {
+    const tasks = [...get().tasks];
+    const index = tasks.findIndex((task) => task.id === id);
+    if (index < 0) return;
+    const updated = { ...tasks[index], completed: !tasks[index].completed, updatedAt: nowIso() };
+    await repository.saveTask(updated);
+    tasks[index] = updated;
     set({ tasks });
   },
 
-  addTask: (input) => {
+  addTask: async (input) => {
     const task: Task = { id: uuidv4(), ...input, completed: false, createdAt: nowIso(), updatedAt: nowIso() };
-    storageService.saveTask(task);
+    await repository.saveTask(task);
     set({ tasks: [task, ...get().tasks] });
   },
 
@@ -109,7 +92,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const reminder: Reminder = { id: uuidv4(), ...input, completed: false, createdAt: nowIso(), updatedAt: nowIso() };
     const notificationId = await scheduleReminderNotification(reminder);
     reminder.notificationId = notificationId;
-    storageService.saveReminder(reminder);
+    await repository.saveReminder(reminder);
     set({ reminders: [reminder, ...get().reminders] });
   },
 
@@ -117,28 +100,28 @@ export const useAppStore = create<AppState>((set, get) => ({
     const reminders = [...get().reminders];
     const index = reminders.findIndex((r) => r.id === id);
     if (index < 0) return;
-    const reminder = reminders[index];
-    const updated = { ...reminder, completed: !reminder.completed, updatedAt: nowIso() };
+    const updated = { ...reminders[index], completed: !reminders[index].completed, updatedAt: nowIso() };
     if (updated.completed) await cancelReminderNotification(updated.notificationId);
-    storageService.saveReminder(updated);
+    await repository.saveReminder(updated);
     reminders[index] = updated;
     set({ reminders });
   },
 
-  addGoal: (input) => {
+  addGoal: async (input) => {
     const goal: Goal = { id: uuidv4(), ...input, currentValue: 0, status: 'active', createdAt: nowIso(), updatedAt: nowIso() };
-    storageService.saveGoal(goal);
+    await repository.saveGoal(goal);
     set({ goals: [goal, ...get().goals] });
   },
 
-  updateGoalProgress: (id, value) => {
-    const goals = get().goals.map((goal) => {
-      if (goal.id !== id) return goal;
-      const status = goal.targetValue && value >= goal.targetValue ? 'completed' : goal.status;
-      const updated = { ...goal, currentValue: value, status, updatedAt: nowIso() };
-      storageService.saveGoal(updated);
-      return updated;
-    });
+  updateGoalProgress: async (id, value) => {
+    const goals = [...get().goals];
+    const index = goals.findIndex((g) => g.id === id);
+    if (index < 0) return;
+    const goal = goals[index];
+    const status = goal.targetValue && value >= goal.targetValue ? 'completed' : goal.status;
+    const updated = { ...goal, currentValue: value, status, updatedAt: nowIso() };
+    await repository.saveGoal(updated);
+    goals[index] = updated;
     set({ goals });
   }
 }));

@@ -30,14 +30,14 @@ export default function TasksScreen() {
           <Picker.Item label="Media" value="medium" />
           <Picker.Item label="Alta" value="high" />
         </Picker>
-        <Button title="Agregar tarea" onPress={handleSubmit((values) => addTask({ ...values, dueDate: values.dueDate || undefined }))} />
+        <Button title="Agregar tarea" onPress={handleSubmit(async (values) => { await addTask({ ...values, dueDate: values.dueDate || undefined }); })} />
       </Card>
       <Card>
         <Text style={{ fontSize: 18, fontWeight: '700' }}>Pendientes ({pending.length})</Text>
         {tasks.map((task) => (
           <View key={task.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{ textDecorationLine: task.completed ? 'line-through' : 'none', flex: 1 }}>{task.title}</Text>
-            <Button title={task.completed ? 'Reabrir' : 'Completar'} onPress={() => toggleTask(task.id)} />
+            <Button title={task.completed ? 'Reabrir' : 'Completar'} onPress={async () => { await toggleTask(task.id); }} />
           </View>
         ))}
       </Card>
