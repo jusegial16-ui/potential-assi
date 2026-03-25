@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { cancelReminderNotification, scheduleReminderNotification } from '@/services/notificationService';
 import { Goal, JournalEntry, Reminder, Task, AppSettings, ParsedEntry } from '@/types';
-import { repository } from '@/repositories';
+import { repository } from '@/db';
 
 interface AppState {
   initialized: boolean;

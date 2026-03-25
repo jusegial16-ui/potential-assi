@@ -21,7 +21,7 @@ app/                  # Rutas y pantallas (Expo Router)
 src/
   components/         # UI reutilizable
   constants/          # Tema y categorías
-  repositories/       # Adaptadores de persistencia (native/web)
+  db/                 # Repositorios de persistencia por plataforma (native/web)
   hooks/              # Bootstrap y búsqueda
   services/           # Persistencia y notificaciones
   store/              # Estado global y casos de uso

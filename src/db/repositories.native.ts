@@ -1,5 +1,5 @@
-import { AppSettings, Goal, JournalEntry, Reminder, Task } from '@/types';
-import { PersistenceAdapter } from './types';
+import { AppSettings, Goal } from '@/types';
+import type { PersistenceAdapter } from './types';
 import { getNativeDb } from '@/services/storage/storage.native';
 
 const defaultSettings: AppSettings = { onboardingDone: false, pinEnabled: false };

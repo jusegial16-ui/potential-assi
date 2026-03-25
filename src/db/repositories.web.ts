@@ -1,5 +1,5 @@
 import { AppSettings, Goal, JournalEntry, Reminder, Task } from '@/types';
-import { PersistenceAdapter } from './types';
+import type { PersistenceAdapter } from './types';
 import { webStorage } from '@/services/storage/storage.web';
 
 const defaultSettings: AppSettings = { onboardingDone: false, pinEnabled: false };
