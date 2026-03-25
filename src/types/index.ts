@@ -1,59 +1,69 @@
-// Type definitions for Journal Entry, Task, Reminder, Goal, Tag, Extracted Data, and App Settings
+export type Priority = 'low' | 'medium' | 'high';
+export type RepeatType = 'once' | 'daily' | 'weekly' | 'monthly';
+export type GoalStatus = 'active' | 'completed' | 'paused';
 
-// Journal Entry Definition
-interface JournalEntry {
-    id: string;
-    title: string;
-    content: string;
-    tags: Tag[];
-    createdAt: Date;
-    updatedAt: Date;
+export interface JournalEntry {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  date: string;
+  rawText: string;
+  summary: string;
+  mood?: string;
+  tags: string[];
 }
 
-// Task Definition
-interface Task {
-    id: string;
-    title: string;
-    isCompleted: boolean;
-    dueDate?: Date;
-    journalEntryId?: string;
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: string;
+  completed: boolean;
+  priority: Priority;
+  relatedEntryId?: string;
+  relatedGoalId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Reminder Definition
-interface Reminder {
-    id: string;
-    message: string;
-    triggerDate: Date;
-    isRecurring: boolean;
+export interface Reminder {
+  id: string;
+  title: string;
+  description?: string;
+  remindAt: string;
+  repeatType: RepeatType;
+  priority: Priority;
+  completed: boolean;
+  relatedEntryId?: string;
+  notificationId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Goal Definition
-interface Goal {
-    id: string;
-    title: string;
-    description: string;
-    targetDate?: Date;
-    isAchieved: boolean;
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  category: string;
+  targetValue?: number;
+  currentValue: number;
+  unit: string;
+  targetDate?: string;
+  status: GoalStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Tag Definition
-interface Tag {
-    id: string;
-    name: string;
+export interface AppSettings {
+  onboardingDone: boolean;
+  pinEnabled: boolean;
+  pinCode?: string;
 }
 
-// Extracted Data Definition
-interface ExtractedData {
-    journalEntries: JournalEntry[];
-    tasks: Task[];
-    reminders: Reminder[];
-    goals: Goal[];
-    tags: Tag[];
-}
-
-// App Settings Definition
-interface AppSettings {
-    theme: 'light' | 'dark';
-    language: string;
-    notificationsEnabled: boolean;
+export interface ParsedEntry {
+  summary: string;
+  tags: string[];
+  tasks: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'completed'>[];
+  reminders: Omit<Reminder, 'id' | 'createdAt' | 'updatedAt' | 'completed'>[];
+  goals: Omit<Goal, 'id' | 'createdAt' | 'updatedAt' | 'currentValue' | 'status'>[];
 }
