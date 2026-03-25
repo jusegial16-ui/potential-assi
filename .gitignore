@@ -1,15 +1,6 @@
-.DS_Store
-*.log
-*.npm
+node_modules
+.expo
+.dist
+web-build
 npm-debug.log*
-yarn-error.log
-package-lock.json
-yarn.lock
-# Expo
-.expo/
-.expo-shared/
-# React Native
-android/
-ios/
-# Node
-node_modules/
+.DS_Store
